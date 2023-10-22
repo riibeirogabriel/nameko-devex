@@ -4,7 +4,7 @@ from nameko.standalone.events import event_dispatcher
 from nameko.testing.services import entrypoint_waiter
 import pytest
 
-from products.dependencies import NotFound
+from products.dependencies import NotFound, ProductAlreadyExists
 from products.service import ProductsService
 
 
@@ -91,6 +91,14 @@ def test_create_product_validation_error(
 
     assert expected_errors == exc_info.value.args[0]
 
+
+def test_create_product_fails_on_product_already_exists(
+        service_container, product):
+
+    with pytest.raises(ProductAlreadyExists):
+        with entrypoint_hook(service_container, 'create') as create:
+            create(product)
+            create(product)
 
 @pytest.mark.parametrize('field', [
     'id', 'title', 'passenger_capacity', 'maximum_speed', 'in_stock'])

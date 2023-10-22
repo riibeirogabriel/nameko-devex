@@ -7,7 +7,7 @@ from nameko.rpc import RpcProxy
 from werkzeug import Response
 
 from gateway.entrypoints import http
-from gateway.exceptions import OrderNotFound, ProductNotFound
+from gateway.exceptions import OrderNotFound, ProductNotFound, ProductAlreadyExists
 from gateway.schemas import CreateOrderSchema, GetOrderSchema, ProductSchema
 
 
@@ -36,7 +36,7 @@ class GatewayService(object):
 
     @http(
         "POST", "/products",
-        expected_exceptions=(ValidationError, BadRequest)
+        expected_exceptions=(ProductAlreadyExists, ValidationError, BadRequest)
     )
     def create_product(self, request):
         """Create a new product - product data is posted as json
@@ -74,6 +74,25 @@ class GatewayService(object):
             json.dumps({'id': product_data['id']}), mimetype='application/json'
         )
 
+    @http("GET", "/orders")
+    def list_orders(self, request):
+        """List all orders created.
+
+        Enhances the order details with full product details from the
+        products-service.
+        """
+
+        orders = self.orders_rpc.list_orders()
+        
+        product_map = {prod['id']: prod for prod in self.products_rpc.list()}
+
+        orders_enhanced = [self._add_data_in_order(order, product_map) for order in orders]
+
+        return Response(
+            GetOrderSchema(many=True).dumps(orders_enhanced).data,
+            mimetype='application/json'
+        )
+
     @http("GET", "/orders/<int:order_id>", expected_exceptions=OrderNotFound)
     def get_order(self, request, order_id):
         """Gets the order details for the order given by `order_id`.
@@ -96,6 +115,9 @@ class GatewayService(object):
         # Retrieve all products from the products service
         product_map = {prod['id']: prod for prod in self.products_rpc.list()}
 
+        return self._add_data_in_order(order, product_map)
+    
+    def _add_data_in_order(self, order: dict, product_map: dict):
         # get the configured image root
         image_root = config['PRODUCT_IMAGE_ROOT']
 

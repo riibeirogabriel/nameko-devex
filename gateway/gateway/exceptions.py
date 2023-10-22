@@ -28,3 +28,7 @@ class OrderNotFound(Exception):
 @remote_error('products.exceptions.NotFound')
 class ProductNotFound(Exception):
     pass
+
+@remote_error('products.exceptions.ProductAlreadyExists')
+class ProductAlreadyExists(Exception):
+    pass

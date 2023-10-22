@@ -1,3 +1,5 @@
+import logging
+
 from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko_sqlalchemy import DatabaseSession
@@ -5,6 +7,9 @@ from nameko_sqlalchemy import DatabaseSession
 from orders.exceptions import NotFound
 from orders.models import DeclarativeBase, Order, OrderDetail
 from orders.schemas import OrderSchema
+from typing import List
+
+logger = logging.getLogger(__name__)
 
 
 class OrdersService:
@@ -14,7 +19,8 @@ class OrdersService:
     event_dispatcher = EventDispatcher()
 
     @rpc
-    def get_order(self, order_id):
+    def get_order(self, order_id: int) -> dict:
+        logger.info('Getting order: %s', order_id)
         order = self.db.query(Order).get(order_id)
 
         if not order:
@@ -23,7 +29,16 @@ class OrdersService:
         return OrderSchema().dump(order).data
 
     @rpc
-    def create_order(self, order_details):
+    def list_orders(self) -> List[dict]:
+        logger.info('Getting orders')
+        orders = self.db.query(Order).all()
+
+        return OrderSchema(many=True).dump(orders).data
+
+    @rpc
+    def create_order(self, order_details: dict) -> dict:
+        logger.info('Creating order: %s', order_details)
+
         order = Order(
             order_details=[
                 OrderDetail(
@@ -38,6 +53,7 @@ class OrdersService:
         self.db.commit()
 
         order = OrderSchema().dump(order).data
+        logger.info('Dispatching order created event: %s', order)
 
         self.event_dispatcher('order_created', {
             'order': order,
@@ -46,7 +62,8 @@ class OrdersService:
         return order
 
     @rpc
-    def update_order(self, order):
+    def update_order(self, order: dict) -> dict:
+        logger.info('Updating order: %s', order)
         order_details = {
             order_details['id']: order_details
             for order_details in order['order_details']
@@ -62,7 +79,8 @@ class OrdersService:
         return OrderSchema().dump(order).data
 
     @rpc
-    def delete_order(self, order_id):
+    def delete_order(self, order_id: int) -> None:
+        logger.info('Deleting order: %s', order_id)
         order = self.db.query(Order).get(order_id)
         self.db.delete(order)
         self.db.commit()

@@ -5,7 +5,7 @@ from nameko.exceptions import safe_for_serialization, BadRequest
 from nameko.web.handlers import HttpRequestHandler
 from werkzeug import Response
 
-from gateway.exceptions import ProductNotFound, OrderNotFound
+from gateway.exceptions import ProductNotFound, ProductAlreadyExists, OrderNotFound
 
 
 class HttpEntrypoint(HttpRequestHandler):
@@ -16,6 +16,7 @@ class HttpEntrypoint(HttpRequestHandler):
         BadRequest: (400, 'BAD_REQUEST'),
         ValidationError: (400, 'VALIDATION_ERROR'),
         ProductNotFound: (404, 'PRODUCT_NOT_FOUND'),
+        ProductAlreadyExists: (409, 'PRODUCT_ALREADY_EXISTS'),
         OrderNotFound: (404, 'ORDER_NOT_FOUND'),
     }
 

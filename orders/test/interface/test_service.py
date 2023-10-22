@@ -35,6 +35,46 @@ def test_get_order(orders_rpc, order):
 
 
 @pytest.mark.usefixtures('db_session')
+def test_list_orders(orders_rpc, order):
+    order_details = [
+        {
+            'product_id': "the_odyssey",
+            'price': 99.99,
+            'quantity': 1
+        },
+        {
+            'product_id': "the_enigma",
+            'price': 5.99,
+            'quantity': 8
+        }
+    ]
+    orders_rpc.create_order(
+        OrderDetailSchema(many=True).dump(order_details).data
+    )
+
+    response = orders_rpc.list_orders()
+    print(response)
+    assert response == [
+        {'id': 1, 'order_details': []},
+        {'id': 2, 'order_details': [
+            {
+                'product_id': 'the_odyssey',
+                'id': 1,
+                'price': '99.99',
+                'quantity': 1
+            },
+            {
+                'product_id': 'the_enigma',
+                'id': 2,
+                'price': '5.99',
+                'quantity': 8
+            }
+        ]
+        }
+    ]
+
+
+@pytest.mark.usefixtures('db_session')
 def test_will_raise_when_order_not_found(orders_rpc):
     with pytest.raises(RemoteError) as err:
         orders_rpc.get_order(1)

@@ -47,6 +47,11 @@ def test_create(product, redis_client, storage):
         int(stored_product[b'passenger_capacity']))
     assert product['in_stock'] == int(stored_product[b'in_stock'])
 
+def test_create_fails_on_product_already_exists(storage, product):
+    with pytest.raises(storage.ProductAlreadyExists) as exc:
+        storage.create(product)
+        storage.create(product)
+    assert 'Product ID LZ127 already exists' == exc.value.args[0]
 
 def test_decrement_stock(storage, create_product, redis_client):
     create_product(id=1, title='LZ 127', in_stock=10)
