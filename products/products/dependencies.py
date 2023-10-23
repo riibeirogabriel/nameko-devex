@@ -65,9 +65,11 @@ class StorageWrapper:
 
     def create(self, product: dict) -> None:
         product_inserted = self.client.hgetall(self._format_key(product['id']))
+
         if product_inserted:
-            raise ProductAlreadyExists(
-                'Product ID {} already exists'.format(product['id']))
+            if product_inserted[b'available'] == b'True':
+                raise ProductAlreadyExists(
+                    'Product ID {} already exists'.format(product['id']))
         
         product['available'] = 'True'
 

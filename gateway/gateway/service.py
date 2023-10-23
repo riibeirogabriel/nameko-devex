@@ -11,9 +11,8 @@ from gateway.exceptions import (
     OrderNotFound, 
     ProductNotFound, 
     ProductAlreadyExists,
-    ProductNotFoundInCache,
-    ProductAlreadyExistsInCache
-)
+    ProductNotFoundInCache
+    )
 from gateway.schemas import CreateOrderSchema, GetOrderSchema, ProductSchema
 
 from gateway import dependencies
@@ -93,6 +92,7 @@ class GatewayService(object):
         """Delete product by `product_id`
         """
         self.products_rpc.delete(product_id)
+        self.cache.delete(product_id)
 
         return Response(
             json.dumps({'id': product_id}), mimetype='application/json'
@@ -106,7 +106,7 @@ class GatewayService(object):
         products-service.
         """
 
-        page = int(request.args.get("page", default=1))
+        page = int(request.args.get("page", default=0))
         page_size = int(request.args.get("page_size", default=1000))
 
         orders = self.orders_rpc.list_orders(page, page_size)
@@ -224,7 +224,7 @@ class GatewayService(object):
             try:
                 self.cache.get(item['product_id'])    
             except ProductNotFoundInCache:
-                product_map = {prod['id']: prod for prod in self.products_rpc.list(list_unavailable=True)}
+                product_map = {prod['id']: prod for prod in self.products_rpc.list()}
                 if item['product_id'] not in product_map.keys():
                     raise ProductNotFound(
                             "Product Id {}".format(item['product_id'])

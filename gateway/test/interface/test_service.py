@@ -301,7 +301,7 @@ class TestListOrders(object):
         assert expected_response == response.json()
 
         # check dependencies called as expected
-        assert [call(1, 1000)] == gateway_service.orders_rpc.list_orders.call_args_list
+        assert [call(0, 1000)] == gateway_service.orders_rpc.list_orders.call_args_list
         assert [call("the_odyssey", get_unavailable=True), 
                 call("the_enigma", get_unavailable=True)] == \
                     gateway_service.products_rpc.get.call_args_list
@@ -349,7 +349,7 @@ class TestCreateOrder(object):
         )
         assert response.status_code == 200
         assert response.json() == {'id': 11}
-        assert gateway_service.products_rpc.list.call_args_list == [call(list_unavailable=True)]
+        assert gateway_service.products_rpc.list.call_args_list == [call()]
         assert gateway_service.orders_rpc.create_order.call_args_list == [
             call([
                 {'product_id': 'the_odyssey', 'quantity': 3, 'price': '41.00'}

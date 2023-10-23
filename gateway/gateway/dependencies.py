@@ -47,14 +47,14 @@ class CacheWrapper:
             yield self._from_hash(self.client.hgetall(key))
 
     def create(self, product: dict) -> None:
-        product_inserted = self.client.hgetall(self._format_key(product['id']))
-        if product_inserted:
-            raise ProductAlreadyExistsInCache(
-                'Product ID {} already exists in cache'.format(product['id']))
         self.client.hmset(
             self._format_key(product['id']),
             product)
 
+    def delete(self, product_id: str) -> None:
+        product = self.get(product_id)
+        self.client.hmset(
+            self._format_key(product_id), product)
 
 class Cache(DependencyProvider):
     """
