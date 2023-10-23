@@ -103,6 +103,24 @@ class TestCreateProduct(object):
 
 class TestGetOrder(object):
 
+    def _products_rpc_get_side_effect(*args):
+        if "the_odyssey" in args:
+            return {
+                'id': 'the_odyssey',
+                'title': 'The Odyssey',
+                'maximum_speed': 3,
+                'in_stock': 899,
+                'passenger_capacity': 100
+            }
+        elif "the_enigma" in args:
+            return {
+                'id': 'the_enigma',
+                'title': 'The Enigma',
+                'maximum_speed': 200,
+                'in_stock': 1,
+                'passenger_capacity': 4
+            }
+    
     def test_can_get_order(self, gateway_service, web_session):
         # setup mock orders-service response:
         gateway_service.orders_rpc.get_order.return_value = {
@@ -124,23 +142,25 @@ class TestGetOrder(object):
         }
 
         # setup mock products-service response:
-        gateway_service.products_rpc.list.return_value = [
-            {
-                'id': 'the_odyssey',
-                'title': 'The Odyssey',
-                'maximum_speed': 3,
-                'in_stock': 899,
-                'passenger_capacity': 100
-            },
-            {
-                'id': 'the_enigma',
-                'title': 'The Enigma',
-                'maximum_speed': 200,
-                'in_stock': 1,
-                'passenger_capacity': 4
-            },
-        ]
+        # gateway_service.products_rpc.list.return_value = [
+        #     {
+        #         'id': 'the_odyssey',
+        #         'title': 'The Odyssey',
+        #         'maximum_speed': 3,
+        #         'in_stock': 899,
+        #         'passenger_capacity': 100
+        #     },
+        #     {
+        #         'id': 'the_enigma',
+        #         'title': 'The Enigma',
+        #         'maximum_speed': 200,
+        #         'in_stock': 1,
+        #         'passenger_capacity': 4
+        #     },
+        # ]
 
+        gateway_service.products_rpc.get.side_effect = self._products_rpc_get_side_effect
+        
         # call the gateway service to get order #1
         response = web_session.get('/orders/1')
         assert response.status_code == 200
@@ -184,7 +204,9 @@ class TestGetOrder(object):
 
         # check dependencies called as expected
         assert [call(1)] == gateway_service.orders_rpc.get_order.call_args_list
-        assert [call()] == gateway_service.products_rpc.list.call_args_list
+        assert [call("the_odyssey"), call("the_enigma")] == gateway_service.products_rpc.get.call_args_list
+
+        #assert [call()] == gateway_service.products_rpc.list.call_args_list
 
     def test_order_not_found(self, gateway_service, web_session):
         gateway_service.orders_rpc.get_order.side_effect = (
@@ -199,6 +221,23 @@ class TestGetOrder(object):
 
 
 class TestListOrders(object):
+    def _products_rpc_get_side_effect(*args):
+        if "the_odyssey" in args:
+            return {
+                'id': 'the_odyssey',
+                'title': 'The Odyssey',
+                'maximum_speed': 3,
+                'in_stock': 899,
+                'passenger_capacity': 100
+            }
+        elif "the_enigma" in args:
+            return {
+                'id': 'the_enigma',
+                'title': 'The Enigma',
+                'maximum_speed': 200,
+                'in_stock': 1,
+                'passenger_capacity': 4
+            }
 
     def test_can_list_orders(self, gateway_service, web_session):
         # setup mock orders-service response:
@@ -225,23 +264,8 @@ class TestListOrders(object):
                 ]
         }]
 
-        # setup mock products-service response:
-        gateway_service.products_rpc.list.return_value = [
-            {
-                'id': 'the_odyssey',
-                'title': 'The Odyssey',
-                'maximum_speed': 3,
-                'in_stock': 899,
-                'passenger_capacity': 100
-            },
-            {
-                'id': 'the_enigma',
-                'title': 'The Enigma',
-                'maximum_speed': 200,
-                'in_stock': 1,
-                'passenger_capacity': 4
-            },
-        ]
+        gateway_service.products_rpc.get.side_effect = self._products_rpc_get_side_effect
+
 
         # call the gateway service to list orders
         response = web_session.get('/orders')
@@ -291,8 +315,8 @@ class TestListOrders(object):
         assert expected_response == response.json()
 
         # check dependencies called as expected
-        assert [call()] == gateway_service.orders_rpc.list_orders.call_args_list
-        assert [call()] == gateway_service.products_rpc.list.call_args_list
+        assert [call(1, 1000)] == gateway_service.orders_rpc.list_orders.call_args_list
+        assert [call("the_odyssey"), call("the_enigma")] == gateway_service.products_rpc.get.call_args_list
 
 
 class TestCreateOrder(object):

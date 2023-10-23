@@ -52,8 +52,7 @@ def test_list_orders(orders_rpc, order):
         OrderDetailSchema(many=True).dump(order_details).data
     )
 
-    response = orders_rpc.list_orders()
-    print(response)
+    response = orders_rpc.list_orders(page=0, page_size=2)
     assert response == [
         {'id': 1, 'order_details': []},
         {'id': 2, 'order_details': [

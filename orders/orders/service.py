@@ -29,9 +29,13 @@ class OrdersService:
         return OrderSchema().dump(order).data
 
     @rpc
-    def list_orders(self) -> List[dict]:
+    def list_orders(self, page, page_size) -> List[dict]:
         logger.info('Getting orders')
-        orders = self.db.query(Order).all()
+        orders = self.db.query(Order)\
+                    .order_by(Order.id)\
+                    .offset(page*page_size)\
+                    .limit(page_size)\
+                    .all()
 
         return OrderSchema(many=True).dump(orders).data
 
