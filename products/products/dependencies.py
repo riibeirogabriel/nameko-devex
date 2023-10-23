@@ -38,23 +38,48 @@ class StorageWrapper:
             'in_stock': int(document[b'in_stock'])
         }
 
-    def get(self, product_id: str) -> dict:
+    def get(self, product_id: str, get_unavailable: bool = False) -> dict:
         product = self.client.hgetall(self._format_key(product_id))
-        if not product:
+        if not product :
             raise NotFound('Product ID {} does not exist'.format(product_id))
+        
+        if get_unavailable:
+                return self._from_hash(product)
         else:
+            if product[b'available'] == b'False':
+                raise NotFound('Product ID {} does not exist'.format(product_id))
             return self._from_hash(product)
 
-    def list(self) -> Iterator[dict]:
+    def list(self, list_unavailable: bool = False) -> Iterator[dict]:
         keys = self.client.keys(self._format_key('*'))
-        for key in keys:
-            yield self._from_hash(self.client.hgetall(key))
+
+        if list_unavailable:
+            for key in keys:
+                yield self._from_hash(self.client.hgetall(key))
+
+        else:
+            for key in keys:
+                product = self.client.hgetall(key)
+                if product[b'available'] == b'True':
+                    yield self._from_hash(product)
 
     def create(self, product: dict) -> None:
         product_inserted = self.client.hgetall(self._format_key(product['id']))
         if product_inserted:
             raise ProductAlreadyExists(
                 'Product ID {} already exists'.format(product['id']))
+        
+        product['available'] = 'True'
+
+        print("create ", product)
+        self.client.hmset(
+            self._format_key(product['id']),
+            product)
+        
+    def delete(self, product_id: str) -> None:
+        product = self.get(product_id)
+        product['available'] = 'False'
+
         self.client.hmset(
             self._format_key(product['id']),
             product)

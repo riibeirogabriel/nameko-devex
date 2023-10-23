@@ -103,7 +103,7 @@ class TestCreateProduct(object):
 
 class TestGetOrder(object):
 
-    def _products_rpc_get_side_effect(*args):
+    def _products_rpc_get_side_effect(*args, **kwargs):
         if "the_odyssey" in args:
             return {
                 'id': 'the_odyssey',
@@ -142,22 +142,6 @@ class TestGetOrder(object):
         }
 
         # setup mock products-service response:
-        # gateway_service.products_rpc.list.return_value = [
-        #     {
-        #         'id': 'the_odyssey',
-        #         'title': 'The Odyssey',
-        #         'maximum_speed': 3,
-        #         'in_stock': 899,
-        #         'passenger_capacity': 100
-        #     },
-        #     {
-        #         'id': 'the_enigma',
-        #         'title': 'The Enigma',
-        #         'maximum_speed': 200,
-        #         'in_stock': 1,
-        #         'passenger_capacity': 4
-        #     },
-        # ]
 
         gateway_service.products_rpc.get.side_effect = self._products_rpc_get_side_effect
         
@@ -204,7 +188,9 @@ class TestGetOrder(object):
 
         # check dependencies called as expected
         assert [call(1)] == gateway_service.orders_rpc.get_order.call_args_list
-        assert [call("the_odyssey"), call("the_enigma")] == gateway_service.products_rpc.get.call_args_list
+        assert [call("the_odyssey", get_unavailable=True), 
+                call("the_enigma", get_unavailable=True)] \
+            == gateway_service.products_rpc.get.call_args_list
 
         #assert [call()] == gateway_service.products_rpc.list.call_args_list
 
@@ -221,7 +207,7 @@ class TestGetOrder(object):
 
 
 class TestListOrders(object):
-    def _products_rpc_get_side_effect(*args):
+    def _products_rpc_get_side_effect(*args, **kwargs):
         if "the_odyssey" in args:
             return {
                 'id': 'the_odyssey',
@@ -316,7 +302,9 @@ class TestListOrders(object):
 
         # check dependencies called as expected
         assert [call(1, 1000)] == gateway_service.orders_rpc.list_orders.call_args_list
-        assert [call("the_odyssey"), call("the_enigma")] == gateway_service.products_rpc.get.call_args_list
+        assert [call("the_odyssey", get_unavailable=True), 
+                call("the_enigma", get_unavailable=True)] == \
+                    gateway_service.products_rpc.get.call_args_list
 
 
 class TestCreateOrder(object):
@@ -361,7 +349,7 @@ class TestCreateOrder(object):
         )
         assert response.status_code == 200
         assert response.json() == {'id': 11}
-        assert gateway_service.products_rpc.list.call_args_list == [call()]
+        assert gateway_service.products_rpc.list.call_args_list == [call(list_unavailable=True)]
         assert gateway_service.orders_rpc.create_order.call_args_list == [
             call([
                 {'product_id': 'the_odyssey', 'quantity': 3, 'price': '41.00'}

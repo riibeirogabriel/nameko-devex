@@ -85,6 +85,19 @@ class GatewayService(object):
             json.dumps({'id': product_data['id']}), mimetype='application/json'
         )
 
+    @http(
+        "DELETE", "/products/<string:product_id>",
+        expected_exceptions=ProductNotFound
+    )
+    def delete_product(self, request, product_id):
+        """Delete product by `product_id`
+        """
+        self.products_rpc.delete(product_id)
+
+        return Response(
+            json.dumps({'id': product_id}), mimetype='application/json'
+        )
+
     @http("GET", "/orders")
     def list_orders(self, request):
         """List all orders created.
@@ -136,7 +149,7 @@ class GatewayService(object):
             try:
                 item['product'] = self.cache.get(product_id)
             except ProductNotFoundInCache:
-                item['product'] = self.products_rpc.get(product_id)
+                item['product'] = self.products_rpc.get(product_id, get_unavailable=True)
                 self.cache.create(item['product'])
 
             # Construct an image url.
@@ -211,7 +224,7 @@ class GatewayService(object):
             try:
                 self.cache.get(item['product_id'])    
             except ProductNotFoundInCache:
-                product_map = {prod['id']: prod for prod in self.products_rpc.list()}
+                product_map = {prod['id']: prod for prod in self.products_rpc.list(list_unavailable=True)}
                 if item['product_id'] not in product_map.keys():
                     raise ProductNotFound(
                             "Product Id {}".format(item['product_id'])
