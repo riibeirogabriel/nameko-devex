@@ -9,6 +9,7 @@ setup(
     install_requires=[
         "marshmallow==2.19.2",
         "nameko==v3.0.0-rc6",
+        "redis==3.2.1"
     ],
     extras_require={
         'dev': [

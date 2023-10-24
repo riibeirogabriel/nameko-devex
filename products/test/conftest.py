@@ -36,9 +36,11 @@ def create_product(redis_client, product):
     def create(**overrides):
         new_product = product.copy()
         new_product.update(**overrides)
+        new_product['available'] = 'True'
         redis_client.hmset(
             'products:{}'.format(new_product['id']),
             new_product)
+        new_product.pop('available')
         return new_product
     return create
 

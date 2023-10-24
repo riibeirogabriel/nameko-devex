@@ -18,6 +18,21 @@ def test_get_fails_on_not_found(storage):
         storage.get(2)
     assert 'Product ID 2 does not exist' == exc.value.args[0]
 
+def test_get_fails_on_not_found_after_delete(storage, products):
+    storage.delete('LZ129')
+    with pytest.raises(storage.NotFound) as exc:
+        storage.get('LZ129')
+    assert 'Product ID LZ129 does not exist' == exc.value.args[0]
+
+def test_get_fails_with_get_unavailable_as_true_after_delete(storage, products):
+    storage.delete('LZ129')
+    product = storage.get('LZ129', get_unavailable=True)
+
+    assert 'LZ129' == product['id']
+    assert 'LZ 129 Hindenburg' == product['title']
+    assert 135 == product['maximum_speed']
+    assert 50 == product['passenger_capacity']
+    assert 11 == product['in_stock']
 
 def test_get(storage, products):
     product = storage.get('LZ129')
@@ -32,7 +47,19 @@ def test_list(storage, products):
     listed_products = storage.list()
     assert (
         products == sorted(list(listed_products), key=lambda x: x['id']))
-
+    
+def test_list_with_unavailable_as_true(storage, products):
+    storage.delete('LZ129')
+    listed_products = storage.list(list_unavailable=True)
+    assert (
+        products == sorted(list(listed_products), key=lambda x: x['id'])) 
+    
+def test_list_after_delete(storage, products):
+    storage.delete('LZ129')
+    listed_products = storage.list()
+    products_without_deleted = [product for product in products if product['id'] != 'LZ129']
+    assert (
+        products_without_deleted == sorted(list(listed_products), key=lambda x: x['id'])) 
 
 def test_create(product, redis_client, storage):
 
@@ -47,6 +74,11 @@ def test_create(product, redis_client, storage):
         int(stored_product[b'passenger_capacity']))
     assert product['in_stock'] == int(stored_product[b'in_stock'])
 
+def test_create_fails_on_product_already_exists(storage, product):
+    with pytest.raises(storage.ProductAlreadyExists) as exc:
+        storage.create(product)
+        storage.create(product)
+    assert 'Product ID LZ127 already exists' == exc.value.args[0]
 
 def test_decrement_stock(storage, create_product, redis_client):
     create_product(id=1, title='LZ 127', in_stock=10)

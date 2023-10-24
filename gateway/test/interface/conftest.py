@@ -19,21 +19,34 @@
 """
 
 import pytest
+import redis
 from collections import namedtuple
+from mock import Mock
 
 from nameko import config
 from nameko.testing.services import replace_dependencies
 
 from gateway.service import GatewayService
+from gateway.dependencies import REDIS_URI_KEY, Cache
 
 
 @pytest.yield_fixture
 def test_config(web_config, rabbit_config):
     with config.patch(
-        {'PRODUCT_IMAGE_ROOT': 'http://example.com/airship/images'}
+        {
+            'PRODUCT_IMAGE_ROOT': 'http://example.com/airship/images',
+            REDIS_URI_KEY: 'redis://localhost:6379/9'
+         }
     ):
         yield
 
+@pytest.fixture
+def cache(test_config):
+    provider = Cache()
+    provider.container = Mock(config=config)
+    provider.setup()
+    provider.client.flushdb()
+    return provider.get_dependency({})
 
 @pytest.fixture
 def create_service_meta(container_factory, test_config):
@@ -77,7 +90,7 @@ def create_service_meta(container_factory, test_config):
 
 
 @pytest.fixture
-def gateway_service(create_service_meta):
+def gateway_service(create_service_meta, cache):
     """ Gateway service test instance with mocked `products_rpc` and
     `orders_rpc` dependencies """
-    return create_service_meta('products_rpc', 'orders_rpc')
+    return create_service_meta('products_rpc', 'orders_rpc', cache = cache)
