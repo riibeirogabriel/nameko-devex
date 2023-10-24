@@ -10,7 +10,7 @@
      * Adding log in each rpc call
   
 - [X] Delete product rpc call
-    * To maintain the data consistence (once an order request requires the order products info), the product is not really deleted, just marked as deleted, so the deleted product will not be available for new orders, but will be available for orders already using this product
+    * To maintain the data integrity (once an order request requires the order products info), the product is not really deleted, just marked as deleted, so the deleted product will not be available for new orders, but will be available for orders already using this product
 - [x] Wire into smoketest.sh
 - [ ] (bonus) Wire into perf-test
 - [x] (bonus) Wire unit-test for this method
