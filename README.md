@@ -32,7 +32,7 @@ The main problem is the order dependency in products data, in POST /orders and G
 These routes require info about the specified products, and an internal rpc request to products service is made for each of them, so there is a big overhead of I/O operations, degrading the application performance as the amount of users grows.
 
 ## Question 2: How do you fix it?
-I have thought in some approaches, but I have decided in a more simple approach that could work as a POC, to add a cache system in gateway service, avoid to use the network in favor of data already stored in the cache.
+I have thought in some approaches, but I have decided in a more simple approach that could work as a POC, to add a cache system in gateway service, avoiding to use the network in favor of data already stored in the cache.
 
 I have used the same redis instance of products service, but using a different database to don't mix data between gateway cache system and the products service data.
 
