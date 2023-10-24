@@ -3,7 +3,7 @@
 
 # Tasks in the Challenge
 
-## Obs: topics marked with check are done
+## Obs: Tasks marked with check are done
 - [X] Enhance product service
      * Avoid creating products already created with same id (Returning an error to user with status code 409)
      * Using typed arguments in service methods and in its returned objects
