@@ -1,4 +1,4 @@
-# Ília Challenge
+# Challenge
 
 
 # Tasks in the Challenge
