@@ -27,17 +27,18 @@
 
 
 ## Question 1: Why is performance degrading as the test run longer?
-    * The main problem is the order dependency in products data, in POST /orders and GET /order/id (now also in the new added route GET /orders).
-    These routes require info about the specified products, and an internal rpc request to products service is made for each of them, so there is a big overhead of I/O operations, degrading the application performance as the amount of users grows.
+The main problem is the order dependency in products data, in POST /orders and GET /order/id (now also in the new added route GET /orders).
+
+These routes require info about the specified products, and an internal rpc request to products service is made for each of them, so there is a big overhead of I/O operations, degrading the application performance as the amount of users grows.
 
 ## Question 2: How do you fix it?
-    * I have thought in some approaches, but I have decided in a more simple approach that could work as a POC, to add a cache system in gateway service, avoid to use the network in favor of data already stored in the cache.
+I have thought in some approaches, but I have decided in a more simple approach that could work as a POC, to add a cache system in gateway service, avoid to use the network in favor of data already stored in the cache.
 
-    * Obs: I have used the same redis instance of products service, but using a different database to don't mix data between gateway cache system and the products service data.
+I have used the same redis instance of products service, but using a different database to don't mix data between gateway cache system and the products service data.
 
 
 ## (bonus): Fix it
-    * Done, In below I have pasted the comparative before and after the gateway cache system:
+Done, In below I have pasted the comparative before and after the gateway cache system:
 
 ### Summary
 
