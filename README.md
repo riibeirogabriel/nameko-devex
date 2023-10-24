@@ -23,16 +23,45 @@
 - [ ]  (bonus) Wire into perf-test
 - [x] (bonus) Wire unit-test for this method
 - [x] Execute performance test
-- [x] Question 1: Why is performance degrading as the test run longer?
+
+
+
+## Question 1: Why is performance degrading as the test run longer?
     * The main problem is the order dependency in products data, in POST /orders and GET /order/id (now also in the new added route GET /orders).
     These routes require info about the specified products, and an internal rpc request to products service is made for each of them, so there is a big overhead of I/O operations, degrading the application performance as the amount of users grows.
 
-- [x] Question 2: How do you fix it?
+## Question 2: How do you fix it?
     * I have thought in some approaches, but I have decided in a more simple approach that could work as a POC, to add a cache system in gateway service, avoid to use the network in favor of data already stored in the cache.
 
     * Obs: I have used the same redis instance of products service, but using a different database to don't mix data between gateway cache system and the products service data.
 
 
-- [x] (bonus): Fix it
-    * Done, In bellow I have pasted the comparative before and after the gateway cache system:
+## (bonus): Fix it
+    * Done, In below I have pasted the comparative before and after the gateway cache system:
 
+### Summary
+
+#### Before
+![Before](test/performance_results/before3.png)
+
+#### After
+
+![After](test/performance_results/after3.png)
+
+### Request Stats
+
+#### Before
+![Before](test/performance_results/before1.png)
+
+#### After
+
+![After](test/performance_results/after1.png)
+
+### Timeline Report
+
+#### Before
+![Before](test/performance_results/before2.png)
+
+#### After
+
+![After](test/performance_results/after2.png)
